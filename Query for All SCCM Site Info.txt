@@ -1,0 +1,80 @@
+select distinct sum.SiteCode,  	
+      SUBSTRING(SiteSystem, (CHARINDEX('\\',sum.SiteSystem)+2), (CHARINDEX('\',SiteSystem,(CHARINDEX('\\',sum.SiteSystem)+2)) - (CHARINDEX('\\',sum.SiteSystem)+2))) 'Server',	
+      CASE Sum.Role	
+	  WHEN 'AI Update Service Point' THEN 'X' ELSE ' ' 
+	  End 'AI Point',
+	  CASE Sum.Role
+	  WHEN 'SMS Distribution Point' THEN 'X' ELSE ' ' 
+	  End 'DP',
+	  CASE Sum.Role
+	  WHEN 'SMS Fallback Status Point' THEN 'X' ELSE ' ' 
+	  End 'FSP',
+	  CASE Sum.Role
+	  WHEN 'SMS Management Point' THEN 'X' ELSE ' ' 
+	  End 'MP',
+	  CASE Sum.Role
+	  WHEN 'SMS PXE Service Point' THEN 'X' ELSE ' ' 
+	  End 'PXE',
+	  CASE Sum.Role
+	  WHEN 'SMS Server Locator Point' THEN 'X' ELSE ' ' 
+	  End 'SLP',
+	  CASE Sum.Role
+	  WHEN 'SMS Site Server' THEN 'X' ELSE ' ' 
+	  End 'Site Server',
+	  CASE Sum.Role
+	  WHEN 'SMS Software Update Point' THEN 'X' ELSE ' ' 
+	  End 'SUP',
+	  CASE Sum.Role
+	  WHEN 'SMS SQL Server' THEN 'X' ELSE ' ' 
+	  End 'SQL',
+	  CASE Sum.Role
+	  WHEN 'SMS SRS Reporting Point' THEN 'X' ELSE ' ' 
+	  End 'SSRS',
+	  CASE Sum.Role
+	  WHEN 'SMS Reporting Point' THEN 'X' ELSE ' ' 
+	  End 'RP',
+Sum.Role
+into ##temp
+from v_SiteSystemSummarizer sum	
+where not sum.Role = 'SMS Component Server'
+
+SET NOCOUNT OFF  
+
+--select * from ##temp
+
+select distinct t1.SiteCode,t1.[Server],
+	(select top 1 [AI Point] from ##temp t11 where t11.SiteCode=t1.SiteCode and t11.Server=t1.Server order by 1 desc) [AI Point],
+	(select top 1 [DP] from ##temp t11 where t11.SiteCode=t1.SiteCode and t11.Server=t1.Server order by 1 desc) [DP],
+	(select top 1 [FSP] from ##temp t11 where t11.SiteCode=t1.SiteCode and t11.Server=t1.Server order by 1 desc) [FSP],
+	(select top 1 [MP] from ##temp t11 where t11.SiteCode=t1.SiteCode and t11.Server=t1.Server order by 1 desc) [MP],
+	(select top 1 [PXE] from ##temp t11 where t11.SiteCode=t1.SiteCode and t11.Server=t1.Server order by 1 desc) [PXE],
+	(select top 1 [SLP] from ##temp t11 where t11.SiteCode=t1.SiteCode and t11.Server=t1.Server order by 1 desc) [SLP],
+	(select top 1 [Site Server] from ##temp t11 where t11.SiteCode=t1.SiteCode and t11.Server=t1.Server order by 1 desc) [Site Server],
+	(select top 1 [SUP] from ##temp t11 where t11.SiteCode=t1.SiteCode and t11.Server=t1.Server order by 1 desc) [SUP],
+	(select top 1 [SQL] from ##temp t11 where t11.SiteCode=t1.SiteCode and t11.Server=t1.Server order by 1 desc) [SQL],
+	(select top 1 [SSRS] from ##temp t11 where t11.SiteCode=t1.SiteCode and t11.Server=t1.Server order by 1 desc) [SSRS],
+	(select top 1 [RP] from ##temp t11 where t11.SiteCode=t1.SiteCode and t11.Server=t1.Server order by 1 desc) [RP],
+	CASE Site1.Type 
+	WHEN 1 THEN 'Secondary' 
+	WHEN 2 Then 'Primary'
+	ELSE 
+		case when (select top 1 [AI Point] from ##temp t11 where t11.SiteCode=t1.SiteCode and t11.Server=t1.Server order by 1 desc)='X' then 'AIPoint ' else '' end+	
+		case when (select top 1 [DP] from ##temp t11 where t11.SiteCode=t1.SiteCode and t11.Server=t1.Server order by 1 desc)='X' then 'DP ' else '' end+	
+		case when (select top 1 [FSP] from ##temp t11 where t11.SiteCode=t1.SiteCode and t11.Server=t1.Server order by 1 desc)='X' then 'FSP ' else '' end+	
+		case when (select top 1 [MP] from ##temp t11 where t11.SiteCode=t1.SiteCode and t11.Server=t1.Server order by 1 desc)='X' then 'MP ' else '' end+	
+		case when (select top 1 [PXE] from ##temp t11 where t11.SiteCode=t1.SiteCode and t11.Server=t1.Server order by 1 desc)='X' then 'PXE ' else '' end+	
+		case when (select top 1 [SLP] from ##temp t11 where t11.SiteCode=t1.SiteCode and t11.Server=t1.Server order by 1 desc)='X' then 'SLP ' else '' end+	
+		case when (select top 1 [Site Server] from ##temp t11 where t11.SiteCode=t1.SiteCode and t11.Server=t1.Server order by 1 desc)='X' then 'SiteServer ' else '' end+	
+		case when (select top 1 [SUP] from ##temp t11 where t11.SiteCode=t1.SiteCode and t11.Server=t1.Server order by 1 desc)='X' then 'SUP ' else '' end+	
+		case when (select top 1 [SQL] from ##temp t11 where t11.SiteCode=t1.SiteCode and t11.Server=t1.Server order by 1 desc)='X' then 'SQL ' else '' end+	
+		case when (select top 1 [SSRS] from ##temp t11 where t11.SiteCode=t1.SiteCode and t11.Server=t1.Server order by 1 desc)='X' then 'SSRS ' else '' end+	
+		case when (select top 1 [RP] from ##temp t11 where t11.SiteCode=t1.SiteCode and t11.Server=t1.Server order by 1 desc)='X' then 'RP ' else '' end
+	End  as [ServerType],	
+	--site1.ReportingSiteCode
+	(select distinct site11.ReportingSiteCode from v_Site site11 
+		where site11.SiteCode = t1.SiteCode and site11.ReportingSiteCode is not null) as [ReportingSiteCode],
+	--site1.Version
+	(select distinct site11.Version from v_Site site11 
+		where site11.SiteCode = t1.SiteCode and site11.Version is not null) as [Version]
+from ##temp t1
+left join v_Site site1 on t1.SiteCode = site1.SiteCode and t1.Server = site1.ServerName
